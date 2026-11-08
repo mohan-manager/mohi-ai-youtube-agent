@@ -1,0 +1,491 @@
+
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#111827">
+<title>Mohi AI YouTube Agent</title>
+<style>
+:root{
+  --bg:#0b1020;--panel:#151d30;--panel2:#1c2940;
+  --text:#f5f7fb;--muted:#aab5c8;--accent:#8b5cf6;
+  --accent2:#06b6d4;--border:#2b3850;--green:#22c55e;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:Arial,"Noto Sans Devanagari",sans-serif;
+}
+header{
+  padding:20px 16px;background:#111a2c;
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:5;
+}
+.brand{font-size:22px;font-weight:800}
+.brand span{color:#a78bfa}
+.sub{color:var(--muted);font-size:12px;margin-top:5px}
+.container{max-width:900px;margin:auto;padding:16px}
+.card{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:15px;padding:16px;margin-bottom:15px;
+}
+h2{font-size:18px;margin:0 0 14px}
+h3{font-size:15px;margin:0 0 10px}
+label{display:block;font-size:13px;color:var(--muted);margin:12px 0 6px}
+input,select,textarea{
+  width:100%;padding:12px;border-radius:9px;
+  border:1px solid var(--border);background:#0e1728;
+  color:var(--text);font-size:15px;outline:none;
+}
+textarea{min-height:100px;resize:vertical}
+button{
+  border:0;border-radius:9px;padding:12px 15px;
+  font-size:14px;font-weight:700;cursor:pointer;
+  background:var(--accent);color:white;margin:5px 3px 0 0;
+}
+button.secondary{background:var(--panel2);border:1px solid var(--border)}
+button.green{background:#15803d}
+button.cyan{background:#0e7490}
+button:active{opacity:.8}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tabs{display:flex;gap:7px;overflow-x:auto;margin-bottom:14px}
+.tabs button{white-space:nowrap;background:var(--panel2)}
+.tabs button.active{background:var(--accent)}
+.output{
+  white-space:pre-wrap;line-height:1.65;
+  background:#0e1728;border:1px solid var(--border);
+  border-radius:10px;padding:14px;min-height:90px;
+  font-size:14px;overflow-wrap:anywhere;
+}
+.status{font-size:12px;color:var(--green);margin-top:10px}
+.small{font-size:12px;color:var(--muted);line-height:1.6}
+.hidden{display:none}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
+@media(max-width:550px){
+  .grid{grid-template-columns:1fr}
+  header{padding:16px}
+  .container{padding:12px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">✨ MOHI <span>AI</span> STUDIO</div>
+  <div class="sub">YouTube Video Production Agent · Version 1.0</div>
+</header>
+
+<main class="container">
+
+<section class="card">
+  <h2>🎬 नया वीडियो प्रोजेक्ट</h2>
+
+  <label>वीडियो का नाम / विषय</label>
+  <input id="topic" placeholder="जैसे: श्री कृष्ण की बाल लीला">
+
+  <div class="grid">
+    <div>
+      <label>वीडियो श्रेणी</label>
+      <select id="category">
+        <option value="कृष्ण 3D एनिमेशन">कृष्ण 3D एनिमेशन</option>
+        <option value="भक्ति वीडियो">भक्ति वीडियो</option>
+        <option value="शिक्षाप्रद कहानी">शिक्षाप्रद कहानी</option>
+        <option value="बच्चों की कहानी">बच्चों की कहानी</option>
+        <option value="सामान्य YouTube वीडियो">सामान्य YouTube वीडियो</option>
+        <option value="YouTube Shorts">YouTube Shorts</option>
+      </select>
+    </div>
+    <div>
+      <label>वीडियो की अवधि</label>
+      <select id="duration">
+        <option>30 सेकंड</option>
+        <option>60 सेकंड</option>
+        <option>3 मिनट</option>
+        <option selected>6 मिनट</option>
+        <option>10 मिनट</option>
+      </select>
+    </div>
+    <div>
+      <label>भाषा</label>
+      <select id="language">
+        <option>हिंदी</option>
+        <option>English</option>
+        <option>हिंदी + English</option>
+      </select>
+    </div>
+    <div>
+      <label>वीडियो स्टाइल</label>
+      <select id="style">
+        <option>3D Animation</option>
+        <option>2D Animation</option>
+        <option>Cinematic Realistic</option>
+        <option>Documentary</option>
+        <option>Educational</option>
+      </select>
+    </div>
+  </div>
+
+  <label>विशेष निर्देश (वैकल्पिक)</label>
+  <textarea id="notes" placeholder="वीडियो में क्या खास होना चाहिए?"></textarea>
+
+  <button class="green" onclick="createProject()">＋ प्रोजेक्ट बनाएँ</button>
+  <button class="secondary" onclick="resetProject()">रीसेट</button>
+  <div id="status" class="status"></div>
+</section>
+
+<section id="workspace" class="card hidden">
+  <h2>🧠 Production Workspace</h2>
+  <div id="projectInfo" class="small"></div>
+
+  <div class="tabs">
+    <button class="active" onclick="showTab('script',this)">स्क्रिप्ट</button>
+    <button onclick="showTab('scenes',this)">सीन प्लान</button>
+    <button onclick="showTab('image',this)">Image Prompts</button>
+    <button onclick="showTab('video',this)">Video Prompts</button>
+    <button onclick="showTab('youtube',this)">YouTube SEO</button>
+  </div>
+
+  <div id="tab-script">
+    <h3>✍️ Script Writer</h3>
+    <button onclick="generate('script')">स्क्रिप्ट तैयार करें</button>
+    <div id="scriptOutput" class="output">यहाँ आपकी स्क्रिप्ट दिखाई देगी।</div>
+    <button class="secondary" onclick="copyOutput('scriptOutput')">कॉपी करें</button>
+    <button class="secondary" onclick="approve('स्क्रिप्ट')">✓ स्क्रिप्ट स्वीकृत</button>
+  </div>
+
+  <div id="tab-scenes" class="hidden">
+    <h3>🎞️ Scene Designer</h3>
+    <button onclick="generate('scenes')">सीन प्लान बनाएँ</button>
+    <div id="scenesOutput" class="output">यहाँ सीन प्लान दिखाई देगा।</div>
+    <button class="secondary" onclick="copyOutput('scenesOutput')">कॉपी करें</button>
+    <button class="secondary" onclick="approve('सीन प्लान')">✓ सीन स्वीकृत</button>
+  </div>
+
+  <div id="tab-image" class="hidden">
+    <h3>🖼️ Gemini Image Prompts</h3>
+    <button onclick="generate('image')">Image Prompts बनाएँ</button>
+    <div id="imageOutput" class="output">यहाँ इमेज प्रॉम्प्ट दिखाई देंगे।</div>
+    <button class="secondary" onclick="copyOutput('imageOutput')">कॉपी करें</button>
+  </div>
+
+  <div id="tab-video" class="hidden">
+    <h3>🎥 Google Flow Video Prompts</h3>
+    <button onclick="generate('video')">Video Prompts बनाएँ</button>
+    <div id="videoOutput" class="output">यहाँ वीडियो प्रॉम्प्ट दिखाई देंगे।</div>
+    <button class="secondary" onclick="copyOutput('videoOutput')">कॉपी करें</button>
+  </div>
+
+  <div id="tab-youtube" class="hidden">
+    <h3>🚀 YouTube Studio Planner</h3>
+    <button onclick="generate('youtube')">Title और SEO बनाएँ</button>
+    <div id="youtubeOutput" class="output">यहाँ YouTube विवरण दिखाई देगा।</div>
+    <button class="secondary" onclick="copyOutput('youtubeOutput')">कॉपी करें</button>
+  </div>
+
+  <div class="small" style="margin-top:15px">
+    स्वीकृति स्थिति: <span id="approval">अभी कोई चरण स्वीकृत नहीं है।</span>
+  </div>
+  <button class="cyan" onclick="saveProject()">प्रोजेक्ट सेव करें</button>
+  <button class="secondary" onclick="downloadProject()">JSON डाउनलोड करें</button>
+</section>
+
+<section class="card">
+  <h2>📁 सेव किए गए प्रोजेक्ट</h2>
+  <div id="savedList" class="small">अभी कोई प्रोजेक्ट सेव नहीं है।</div>
+</section>
+
+<section class="card">
+  <h3>ℹ️ Agent की वर्तमान क्षमता</h3>
+  <p class="small">
+    यह Version 1.0 एक काम करने वाला फ्रंटएंड प्रोटोटाइप है।
+    यह विषय के आधार पर स्क्रिप्ट और प्रॉम्प्ट के शुरुआती ड्राफ्ट तैयार करता है।
+    Gemini, Google Flow, Voice और Music के वास्तविक API कनेक्शन
+    अभी इसमें जोड़े नहीं गए हैं।
+  </p>
+</section>
+
+</main>
+
+<footer>Mohi AI Studio · Your YouTube Production Workspace</footer>
+
+<script>
+let project = null;
+let approvals = [];
+
+function value(id){
+  return document.getElementById(id).value.trim();
+}
+
+function createProject(){
+  const topic = value("topic");
+  if(!topic){
+    alert("कृपया पहले वीडियो का विषय लिखें।");
+    document.getElementById("topic").focus();
+    return;
+  }
+
+  project = {
+    topic,
+    category:value("category"),
+    duration:value("duration"),
+    language:value("language"),
+    style:value("style"),
+    notes:value("notes"),
+    created:new Date().toLocaleString("hi-IN"),
+    outputs:{}
+  };
+  approvals = [];
+  document.getElementById("workspace").classList.remove("hidden");
+  document.getElementById("projectInfo").textContent =
+    "विषय: "+project.topic+" | "+project.category+
+    " | अवधि: "+project.duration;
+  document.getElementById("approval").textContent =
+    "अभी कोई चरण स्वीकृत नहीं है।";
+  document.getElementById("status").textContent =
+    "✓ प्रोजेक्ट तैयार है। अब अपना काम शुरू करें।";
+  showTab("script",document.querySelector(".tabs button"));
+  saveProject();
+  document.getElementById("workspace").scrollIntoView({behavior:"smooth"});
+}
+
+function showTab(name,button){
+  ["script","scenes","image","video","youtube"].forEach(t=>{
+    document.getElementById("tab-"+t).classList.add("hidden");
+  });
+  document.getElementById("tab-"+name).classList.remove("hidden");
+  document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
+  if(button) button.classList.add("active");
+}
+
+function generate(type){
+  if(!project){
+    alert("पहले प्रोजेक्ट बनाएँ।");
+    return;
+  }
+
+  const p = project;
+  let result = "";
+
+  if(type==="script"){
+    result =
+`शीर्षक: ${p.topic}
+
+ओपनिंग:
+नमस्कार दोस्तों! आज हम जानेंगे ${p.topic} के बारे में।
+इस रोचक वीडियो को अंत तक जरूर देखिए।
+
+मुख्य कहानी:
+${p.topic} पर आधारित कहानी को सरल, रोचक और क्रमबद्ध तरीके से प्रस्तुत करें।
+शुरुआत में विषय का परिचय दें, फिर मुख्य घटनाओं और उनके महत्व को समझाएँ।
+जहाँ जरूरी हो वहाँ संवाद और भावनात्मक वर्णन जोड़ें।
+
+सीख / संदेश:
+इस कहानी से मिलने वाली मुख्य सीख दर्शकों को समझाएँ।
+
+समापन:
+अगर आपको यह वीडियो पसंद आया हो तो चैनल को सब्सक्राइब करें।
+धन्यवाद!
+
+निर्देश:
+भाषा: ${p.language}
+अवधि: ${p.duration}
+स्टाइल: ${p.style}
+विशेष निर्देश: ${p.notes || "कोई अतिरिक्त निर्देश नहीं"}`;
+  }
+
+  if(type==="scenes"){
+    result =
+`सीन प्लान: ${p.topic}
+
+सीन 1 — परिचय
+विषय और वातावरण का परिचय।
+
+सीन 2 — कहानी की शुरुआत
+मुख्य पात्र और स्थान दिखाएँ।
+
+सीन 3 — मुख्य घटना
+कहानी की महत्वपूर्ण घटना दिखाएँ।
+
+सीन 4 — भावनात्मक क्षण
+पात्रों के भाव और प्रतिक्रियाएँ दिखाएँ।
+
+सीन 5 — समाधान
+कहानी का मुख्य समाधान प्रस्तुत करें।
+
+सीन 6 — समापन
+सीख, संदेश और अंतिम दृश्य।
+
+हर सीन के लिए अलग Voiceover, कैमरा एंगल,
+Background Music और Sound Effects तय करें।`;
+  }
+
+  if(type==="image"){
+    result =
+`IMAGE PROMPT — ${p.topic}
+
+Create a high-quality ${p.style} visual.
+Subject: ${p.topic}
+Category: ${p.category}
+Language/context: ${p.language}
+
+Visual requirements:
+- Clear subject and composition
+- Detailed environment and lighting
+- Consistent character appearance
+- Cinematic camera framing
+- High-quality textures
+- 16:9 landscape composition
+
+विशेष निर्देश: ${p.notes || "साफ और आकर्षक दृश्य"}`;
+  }
+
+  if(type==="video"){
+    result =
+`GOOGLE FLOW VIDEO PROMPT
+
+Create a cinematic ${p.style} video scene.
+Topic: ${p.topic}
+Duration target: ${p.duration}
+
+Include:
+- Natural character movement
+- Consistent character design
+- Smooth camera movement
+- Appropriate expressions
+- Environment animation
+- Suitable lighting
+- Background atmosphere
+
+Audio: Add suitable ambient sound and sound effects.
+Avoid unwanted text, logos and visual distortions.
+
+विशेष निर्देश: ${p.notes || "कहानी के अनुसार दृश्य बनाएँ"}`;
+  }
+
+  if(type==="youtube"){
+    result =
+`YOUTUBE TITLE:
+${p.topic} | रोचक कहानी और महत्वपूर्ण सीख
+
+DESCRIPTION:
+इस वीडियो में हम ${p.topic} के बारे में जानेंगे।
+वीडियो पसंद आए तो Like, Share और Subscribe करें।
+
+TAGS:
+${p.topic}, Hindi Video, Hindi Story, YouTube,
+${p.category}, Mohi AI
+
+THUMBNAIL IDEA:
+मुख्य विषय को बड़े और स्पष्ट रूप में दिखाएँ।
+भावनात्मक दृश्य और कम शब्दों वाला आकर्षक शीर्षक रखें।
+
+CATEGORY: ${p.category}
+VIDEO LENGTH: ${p.duration}`;
+  }
+
+  project.outputs[type] = result;
+  document.getElementById(type+"Output").textContent = result;
+  saveProject(false);
+}
+
+function approve(stage){
+  if(!project) return;
+  if(!approvals.includes(stage)) approvals.push(stage);
+  document.getElementById("approval").textContent =
+    approvals.join(" · ")+" — स्वीकृत";
+  saveProject(false);
+}
+
+function copyOutput(id){
+  const text = document.getElementById(id).textContent;
+  if(!text || text.startsWith("यहाँ")){
+    alert("पहले सामग्री तैयार करें।");
+    return;
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text)
+      .then(()=>alert("कॉपी हो गया।"))
+      .catch(()=>fallbackCopy(text));
+  }else{
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text){
+  const area=document.createElement("textarea");
+  area.value=text;
+  document.body.appendChild(area);
+  area.select();
+  try{
+    document.execCommand("copy");
+    alert("कॉपी हो गया।");
+  }catch(e){
+    alert("कॉपी नहीं हो पाया। कृपया टेक्स्ट चुनकर कॉपी करें।");
+  }
+  area.remove();
+}
+
+function saveProject(showMessage=true){
+  if(!project) return;
+  project.approvals = approvals;
+  const list = JSON.parse(localStorage.getItem("mohiProjects") || "[]");
+  const index = list.findIndex(x=>x.topic===project.topic && x.created===project.created);
+  if(index>=0) list[index]=project;
+  else list.unshift(project);
+  localStorage.setItem("mohiProjects",JSON.stringify(list));
+  renderSaved();
+  if(showMessage) document.getElementById("status").textContent="✓ प्रोजेक्ट सेव हो गया।";
+}
+
+function renderSaved(){
+  const list=JSON.parse(localStorage.getItem("mohiProjects") || "[]");
+  const box=document.getElementById("savedList");
+  if(!list.length){
+    box.textContent="अभी कोई प्रोजेक्ट सेव नहीं है।";
+    return;
+  }
+  box.innerHTML="";
+  list.forEach((item,index)=>{
+    const div=document.createElement("div");
+    div.style.padding="10px";
+    div.style.borderBottom="1px solid var(--border)";
+    const title=document.createElement("strong");
+    title.textContent=item.topic;
+    const detail=document.createElement("div");
+    detail.className="small";
+    detail.textContent=item.category+" · "+item.duration;
+    div.append(title,detail);
+    box.appendChild(div);
+  });
+}
+
+function downloadProject(){
+  if(!project){
+    alert("पहले प्रोजेक्ट बनाएँ।");
+    return;
+  }
+  project.approvals=approvals;
+  const blob=new Blob([JSON.stringify(project,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download="mohi-youtube-project.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function resetProject(){
+  if(!confirm("वर्तमान फॉर्म साफ करना चाहते हैं?")) return;
+  project=null;
+  approvals=[];
+  ["topic","notes"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("workspace").classList.add("hidden");
+  document.getElementById("status").textContent="फॉर्म साफ हो गया।";
+}
+
+renderSaved();
+</script>
+</body>
+          </html>
+          
